@@ -25,8 +25,19 @@ const server = http.createServer((req, res) => {
 
   // Quote several symbols at once: /api/quotes?symbols=ACME,GLOBEX
   if (url.pathname === '/api/quotes') {
-    const symbols = url.searchParams.get('symbols').split(',');
-    const quotes = symbols.map((s) => ({ symbol: s.toUpperCase(), price: formatCents(PRICES[s.toUpperCase()]) }));
+    const symbols = (url.searchParams.get('symbols') || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (symbols.length === 0) {
+      return json(res, 400, { error: 'symbols parameter is required' });
+    }
+    const quotes = [];
+    for (const raw of symbols) {
+      const symbol = raw.toUpperCase();
+      if (!(symbol in PRICES)) return json(res, 404, { error: 'unknown symbol' });
+      quotes.push({ symbol, price: formatCents(PRICES[symbol]) });
+    }
     return json(res, 200, quotes);
   }
 
