@@ -23,6 +23,13 @@ const server = http.createServer((req, res) => {
     return json(res, 200, out);
   }
 
+  // Quote several symbols at once: /api/quotes?symbols=ACME,GLOBEX
+  if (url.pathname === '/api/quotes') {
+    const symbols = url.searchParams.get('symbols').split(',');
+    const quotes = symbols.map((s) => ({ symbol: s.toUpperCase(), price: formatCents(PRICES[s.toUpperCase()]) }));
+    return json(res, 200, quotes);
+  }
+
   if (url.pathname === '/api/quote') {
     const symbol = (url.searchParams.get('symbol') || '').toUpperCase();
     const discount = Number(url.searchParams.get('discount') || 0);
